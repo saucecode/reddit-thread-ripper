@@ -4,16 +4,16 @@ A program to download an entire Reddit thread's comment section. It can be used 
 ## Library Usage
 
     import ripper
-	url = "https://www.reddit.com/r/Cyberpunk/comments/5xepe6/hong_kong_side_street_on_a_dark_rainy_night/.json"
+	url = "https://www.reddit.com/r/newzealand/comments/5xl1uc/nz_post_meridiem_random_discussion_thread_sun_05/.json"
 	topic, comments = ripper.downloadCommentsSection(url)
 
 	print('Downloaded', len(comments), 'top-level comments for thread:', topic['title'])
 
 ## Script Usage
 
-    $ python ripper.py https://www.reddit.com/r/Cyberpunk/comments/5xepe6/hong_kong_side_street_on_a_dark_rainy_night/
+    $ python ripper.py https://www.reddit.com/r/newzealand/comments/5xl1uc/nz_post_meridiem_random_discussion_thread_sun_05/
 
-Will write to a file `5xepe6.json`. This file will (by default) contain the following structure. The root element is an array of length 2. First element is a dictionary containing details about the main post. Second element is an array of all the comments. Each comment contains an array of reply comments.
+Will write to a file `5xl1uc.json`. This file will (by default) contain the following structure. The root element is an array of length 2. First element is a dictionary containing details about the main post. Second element is an array of all the comments. Each comment contains an array of reply comments.
 
 	[
 		{
