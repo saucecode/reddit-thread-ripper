@@ -69,3 +69,7 @@ Will write to a file `5xl1uc.json`. This file will (by default) contain the foll
 	]
 
 You can view this file in full by viewing `5xl1uc.json` in this repo. It is a rip of [this thread from /r/NewZealand](https://www.reddit.com/r/newzealand/comments/5xl1uc/nz_post_meridiem_random_discussion_thread_sun_05/)
+
+## Output to HTML
+
+I've written an extra script `parse-rip-output.py` to take the output files and convert them to a simple nested HTML format. It's easier to read than a JSON object.
