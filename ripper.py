@@ -61,7 +61,7 @@ def downloadCommentsSection(json_url):
 		'permalink': data[0]['data']['children'][0]['data']['permalink'],
 		'url': data[0]['data']['children'][0]['data']['url'],
 		'title': data[0]['data']['children'][0]['data']['title'],
-		'body':  data[0]['data']['children'][0]['data']['body'] if 'body' in data[0]['data']['children'][0]['data'] else None,
+		'body':  data[0]['data']['children'][0]['data']['body'] if 'body' in data[0]['data']['children'][0]['data'] else '',
 		'id': data[0]['data']['children'][0]['data']['id']
 	}
 
