@@ -1,29 +1,14 @@
+from __future__ import print_function
 import json, requests, os, sys
 
 sess = requests.Session()
 
 def getjson(url):
 	print('downloading',url)
-	ret = sess.get(url, headers={'User-Agent': 'ripperino-saucecode/1.0'}).json()
+	ret = sess.get(url, headers={'User-Agent': 'ripperino/1.0'}).json()
 	return ret
 
-if not len(sys.argv) == 2:
-	print 'usage:', sys.argv[0], '[reddit thread URL]'
-	sys.exit(0)
-
-data = requests.get(sys.argv[1], headers={'User-Agent': 'ripperino-saucecode/1.0'}).json()
-
-parsed = []
-topic = {
-	'author': data[0]['data']['children'][0]['data']['author'],
-	'created': data[0]['data']['children'][0]['data']['created_utc'],
-	'score': data[0]['data']['children'][0]['data']['score'],
-	'permalink': data[0]['data']['children'][0]['data']['permalink'],
-	'title': data[0]['data']['children'][0]['data']['title'],
-	'body':  data[0]['data']['children'][0]['data']['body'] if 'body' in data[0]['data']['children'][0]['data'] else 'no body'
-}
-
-def doTheThing(toplevelcomments, out):
+def parseReplies(toplevelcomments, out):
 	for comment in toplevelcomments:
 		if comment['kind'] == 't1':
 			newitem = {
@@ -37,13 +22,13 @@ def doTheThing(toplevelcomments, out):
 			out.append(newitem)
 			
 			if 'replies' in comment['data'] and len(comment['data']['replies']) > 0:
-				doTheThing(comment['data']['replies']['data']['children'], newitem['replies'])
+				parseReplies(comment['data']['replies']['data']['children'], newitem['replies'])
 			
 		elif comment['kind'] == 'more':
 			idarray = [topic['permalink'] + x for x in comment['data']['children']]
 			if len(idarray) == 0:
 				continue
-			print 'MORE! grabbing', len(idarray), 'more comments using requests.get'
+			print('MORE! grabbing', len(idarray), 'more comments using requests.get')
 			newcomments = [getjson('https://reddit.com' + x + '/.json') for x in idarray]
 			
 			for camment in newcomments:
@@ -63,16 +48,38 @@ def doTheThing(toplevelcomments, out):
 				out.append(newitem)
 				
 				if not responses == '':
-					doTheThing(responses['data']['children'], newitem['replies'])
+					parseReplies(responses['data']['children'], newitem['replies'])
 
+def downloadCommentsSection(json_url):
+	data = requests.get(sys.argv[1] + '.json', headers={'User-Agent': 'ripperino/1.0'}).json()
 
-doTheThing(data[1]['data']['children'], parsed)
+	parsed = []
+	topic = {
+		'author': data[0]['data']['children'][0]['data']['author'],
+		'created': data[0]['data']['children'][0]['data']['created_utc'],
+		'score': data[0]['data']['children'][0]['data']['score'],
+		'permalink': data[0]['data']['children'][0]['data']['permalink'],
+		'url': data[0]['data']['children'][0]['data']['url'],
+		'title': data[0]['data']['children'][0]['data']['title'],
+		'body':  data[0]['data']['children'][0]['data']['body'] if 'body' in data[0]['data']['children'][0]['data'] else None
+	}
+	
+	parseReplies(data[1]['data']['children'], parsed)
+	
+	return topic, parsed
 
-with open('parsed.json','wb') as f:
-	json.dump(parsed, f)
+if __name__ == '__main__':
 
-with open('topic.json','wb') as f:
-	json.dump(topic, f)
+	if not len(sys.argv) == 2:
+		print('usage:', sys.argv[0], '[reddit thread URL]')
+		sys.exit(0)
+	
+	topic, parsed = downloadCommentsSection(sys.argv[1] + '.json')
+
+	with open('output.json','w') as f:
+		json.dump([topic, parsed], f)
+	
+
 
 '''
 author
