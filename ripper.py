@@ -8,7 +8,7 @@ def getjson(url):
 	ret = sess.get(url, headers={'User-Agent': 'ripperino/1.0'}).json()
 	return ret
 
-def parseReplies(toplevelcomments, out):
+def parseReplies(topic, toplevelcomments, out):
 	for comment in toplevelcomments:
 		if comment['kind'] == 't1':
 			newitem = {
@@ -22,7 +22,7 @@ def parseReplies(toplevelcomments, out):
 			out.append(newitem)
 
 			if 'replies' in comment['data'] and len(comment['data']['replies']) > 0:
-				parseReplies(comment['data']['replies']['data']['children'], newitem['replies'])
+				parseReplies(topic, comment['data']['replies']['data']['children'], newitem['replies'])
 
 		elif comment['kind'] == 'more':
 			idarray = [topic['permalink'] + x for x in comment['data']['children']]
@@ -48,10 +48,26 @@ def parseReplies(toplevelcomments, out):
 				out.append(newitem)
 
 				if not responses == '':
-					parseReplies(responses['data']['children'], newitem['replies'])
+					parseReplies(topic, responses['data']['children'], newitem['replies'])
+
+def countComments(parsed, obj=None):
+	if obj:
+		if not 'commentcount' in obj:
+			obj['commentcount'] = 0
+		obj['commentcount'] += len(parsed)
+	else:
+		obj = {'commentcount': len(parsed)}
+	
+	for comment in parsed:
+		if len(comment['replies']) > 0:
+			countComments(comment['replies'], obj)
+	
+	return obj['commentcount']
 
 def downloadCommentsSection(json_url):
 	data = requests.get(json_url, headers={'User-Agent': 'ripperino/1.0'}).json()
+	with open('temporary.json','wb') as f:
+		json.dump(data,f)
 
 	parsed = []
 	topic = {
@@ -61,11 +77,18 @@ def downloadCommentsSection(json_url):
 		'permalink': data[0]['data']['children'][0]['data']['permalink'],
 		'url': data[0]['data']['children'][0]['data']['url'],
 		'title': data[0]['data']['children'][0]['data']['title'],
-		'body':  data[0]['data']['children'][0]['data']['body'] if 'body' in data[0]['data']['children'][0]['data'] else '',
-		'id': data[0]['data']['children'][0]['data']['id']
+		'body':  data[0]['data']['children'][0]['data']['selftext'],
+		'id': data[0]['data']['children'][0]['data']['id'],
+
+		'nsfw': data[0]['data']['children'][0]['data']['over_18'],
+		'gilded': data[0]['data']['children'][0]['data']['gilded'],
+		'stickied': data[0]['data']['children'][0]['data']['stickied'],
+		'commentcount': 0
 	}
 
-	parseReplies(data[1]['data']['children'], parsed)
+	parseReplies(topic, data[1]['data']['children'], parsed)
+
+	countComments(parsed, topic)
 
 	return topic, parsed
 
@@ -79,5 +102,6 @@ if __name__ == '__main__':
 
 	topic, parsed = downloadCommentsSection(sys.argv[1] + '.json')
 
-	with open('%s.json' % topic['id'],'w') as f:
-		json.dump([topic, parsed], f, indent=4, separators=(',', ': '))
+	with open('%s.%s-%i.json' % (topic['id'], topic['permalink'].split('/')[-2], int(topic['created'])),'w') as f:
+		# json.dump([topic, parsed], f, indent=4, separators=(',', ': ')) # pretty print
+		json.dump([topic, parsed], f)
