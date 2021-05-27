@@ -13,6 +13,7 @@ with open(sys.argv[1], 'r') as f:
 html = '''<!DOCTYPE html>
 <html>
 	<head>
+		<meta charset="UTF-8">
 		<title>output</title>
 		<style>
 			body {
