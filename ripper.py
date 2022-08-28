@@ -66,7 +66,7 @@ def countComments(parsed, obj=None):
 
 def downloadCommentsSection(json_url):
 	data = requests.get(json_url, headers={'User-Agent': 'ripperino/1.0'}).json()
-	with open('temporary.json','wb') as f:
+	with open('temporary.json','w') as f:
 		json.dump(data,f)
 
 	parsed = []
